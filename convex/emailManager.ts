@@ -91,7 +91,21 @@ export const sendVerificationEmail = internalAction({
       return;
     }
 
-    const verificationUrl = `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/api/verify-email?token=${args.token}`;
+    // Dynamic URL generation for both local and production
+    const getBaseUrl = () => {
+      // Check if we're in Vercel production
+      if (process.env.VERCEL_URL) {
+        return `https://${process.env.VERCEL_URL}`;
+      }
+      // Check if we have a custom production URL
+      if (process.env.NEXT_PUBLIC_APP_URL) {
+        return process.env.NEXT_PUBLIC_APP_URL;
+      }
+      // Default to localhost for development
+      return 'http://localhost:3000';
+    };
+
+    const verificationUrl = `${getBaseUrl()}/api/verify-email?token=${args.token}`;
 
     try {
       const response = await fetch('https://api.resend.com/emails', {

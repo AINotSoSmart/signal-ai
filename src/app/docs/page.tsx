@@ -361,7 +361,6 @@ export default function DocsPage() {
                         Some websites use dynamic content that may not be captured. Try adjusting the monitor type or check interval.
                       </p>
                     </div>
-                    
                     <div>
                       <h4 className="font-medium mb-2">Webhook not receiving notifications</h4>
                       <p className="text-sm text-gray-600 mb-2">
