@@ -356,13 +356,6 @@ export default function DocsPage() {
                 <CardContent>
                   <div className="space-y-4">
                     <div>
-                      <h4 className="font-medium mb-2">Website not being monitored</h4>
-                      <p className="text-sm text-gray-600 mb-2">
-                        Ensure the website URL is accessible and the server's Firecrawl API key is properly configured. Contact support if issues persist.
-                      </p>
-                    </div>
-                    
-                    <div>
                       <h4 className="font-medium mb-2">Changes not detected</h4>
                       <p className="text-sm text-gray-600 mb-2">
                         Some websites use dynamic content that may not be captured. Try adjusting the monitor type or check interval.
