@@ -12,7 +12,7 @@ import { useConvexAuth, useMutation, useQuery, useAction } from "convex/react"
 import { api } from "../../convex/_generated/api"
 import { useRouter } from 'next/navigation'
 import { WebhookConfigModal } from '@/components/WebhookConfigModal'
-import { FirecrawlKeyBanner } from '@/components/FirecrawlKeyBanner'
+
 import { APP_CONFIG } from '@/config/app.config'
 import { validateEmail, validatePassword } from '@/lib/validation'
 import { useToast } from '@/hooks/use-toast'
@@ -68,7 +68,6 @@ export default function HomePage() {
   
   // Convex queries and mutations
   const websites = useQuery(api.websites.getUserWebsites)
-  const firecrawlKey = useQuery(api.firecrawlKeys.getUserFirecrawlKey)
   
   // Track website list updates
   useEffect(() => {
@@ -524,8 +523,7 @@ export default function HomePage() {
     <Layout>
       <Header ctaHref="https://github.com/new?template_name=firecrawl-observer&template_owner=your-org" />
       
-      {/* Show banner if no Firecrawl API key is set */}
-      {!firecrawlKey?.hasKey && <FirecrawlKeyBanner />}
+
       
       <Hero 
         title={

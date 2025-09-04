@@ -11,6 +11,7 @@ A powerful website monitoring application that tracks changes on websites and se
 - **Website Monitoring**: Track changes on single pages or entire websites
 - **AI-Powered Analysis**: Filter out noise with intelligent change detection
 - **Flexible Notifications**: Email, webhooks, or dashboard-only monitoring
+- **Programmatic API**: Full REST API for automation and integration ([API Documentation](docs/API_DOCUMENTATION.md))
 - **Secure API Key Management**: Encrypted storage for Firecrawl and AI provider keys
 - **Real-time Updates**: Instant change detection with configurable intervals
 - **Beautiful UI**: Modern, responsive interface with dark mode support
@@ -70,6 +71,9 @@ When prompted for the local web server URL, enter: `http://localhost:3000`
 # Generate and set encryption key for API key storage
 npx convex env set ENCRYPTION_KEY "$(openssl rand -base64 32)"
 
+# Required: Set your Firecrawl API key for website monitoring
+npx convex env set FIRECRAWL_API_KEY "your_firecrawl_api_key"
+
 # Optional: Set up email notifications
 npx convex env set RESEND_API_KEY "your_resend_api_key"
 npx convex env set FROM_EMAIL "noreply@yourdomain.com"
@@ -112,7 +116,7 @@ Required variables in Convex dashboard:
 - `JWKS` - Automatically set by `npx @convex-dev/auth` (required for auth)
 - `SITE_URL` - Automatically set by `npx @convex-dev/auth` (required)
 - `ENCRYPTION_KEY` - For securing API keys in database (required)
-- `FIRECRAWL_API_KEY` - For website monitoring (optional, users can add their own)
+- `FIRECRAWL_API_KEY` - For website monitoring (required)
 - `RESEND_API_KEY` - For email notifications (optional)
 - `FROM_EMAIL` - Sender email address (optional)
 
@@ -131,10 +135,11 @@ Required variables in Convex dashboard:
 ### API Key Management
 
 Users can add their own API keys for:
-- **Firecrawl**: Required for website monitoring
 - **AI Provider**: Optional, for intelligent change filtering
 
 API keys are encrypted before storage using AES-256-GCM encryption.
+
+**Note**: Firecrawl API key is now configured server-side by the application administrator.
 
 ### Notification Options
 
@@ -189,6 +194,37 @@ Before committing, ensure your code passes:
 npm run lint
 npm run typecheck
 ```
+
+## API Integration
+
+Firecrawl Observer provides a complete REST API for programmatic website monitoring management. This enables:
+
+- **Automated Website Addition**: Add websites via scripts or applications
+- **Bulk Operations**: Import multiple websites at once
+- **CI/CD Integration**: Monitor deployments automatically
+- **External Tool Integration**: Connect with existing monitoring dashboards
+- **Remote Management**: Manage monitoring from anywhere
+
+### Quick API Example
+
+```bash
+# Add a website to monitoring
+curl -X POST https://your-domain.com/api/websites \
+  -H "Authorization: Bearer YOUR_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "url": "https://example.com",
+    "type": "scrape",
+    "checkInterval": 60,
+    "webhook": "https://hooks.slack.com/your-webhook"
+  }'
+```
+
+### API Documentation
+
+- **📖 Complete API Guide**: [API Documentation](docs/API_DOCUMENTATION.md)
+- **🚀 Quick Start**: [API Quick Start Guide](docs/API_QUICK_START.md)
+- **🌐 Interactive Docs**: Visit `/api-docs` in your dashboard
 
 ## Deployment
 

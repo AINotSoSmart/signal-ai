@@ -5,25 +5,14 @@ import { Id } from "./_generated/dataModel";
 import FirecrawlApp from "@mendable/firecrawl-js";
 import { requireCurrentUserForAction } from "./helpers";
 
-// Initialize Firecrawl client with user's API key
+// Initialize Firecrawl client with server-side API key
 export const getFirecrawlClient = async (ctx: any, userId: string) => {
-  // First try to get user's API key from internal query
-  const userKeyData = await ctx.runQuery(internal.firecrawlKeys.getDecryptedFirecrawlKey, { userId });
-  
-  if (userKeyData && userKeyData.key) {
-    // Using user's Firecrawl API key
-    // Update last used timestamp
-    await ctx.runMutation(internal.firecrawlKeys.updateLastUsed, { keyId: userKeyData.keyId });
-    return new FirecrawlApp({ apiKey: userKeyData.key });
-  }
-  
-  // Fallback to environment variable if user hasn't set their own key
+  // Use server-side environment variable only
   const apiKey = process.env.FIRECRAWL_API_KEY;
   if (!apiKey) {
-    console.error("No Firecrawl API key found in environment or user settings");
-    throw new Error("No Firecrawl API key found. Please add your API key in settings.");
+    console.error("No Firecrawl API key found in environment variables");
+    throw new Error("Firecrawl API key not configured on server. Please contact support.");
   }
-  // Using environment Firecrawl API key
   return new FirecrawlApp({ apiKey });
 };
 

@@ -103,26 +103,26 @@ export default function DocsPage() {
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
               <div>
                 <h3 className="text-xl font-semibold mb-4 flex items-center gap-2">
-                  <Key className="h-5 w-5" />
-                  1. Set up Firecrawl Auth
+                  <Monitor className="h-5 w-5" />
+                  1. Add Your First Website
                 </h3>
                 <p className="text-gray-600 mb-4">
-                  First, you&apos;ll need a Firecrawl API key to start monitoring websites. This is required for all scraping operations.
+                  Start monitoring by adding a website URL. The Firecrawl API is pre-configured by the administrator, so you can begin monitoring immediately.
                 </p>
                 <Button variant="orange" asChild>
-                  <Link href="/settings?section=firecrawl">
-                    Configure API Key
+                  <Link href="/">
+                    Add Website
                   </Link>
                 </Button>
               </div>
               
               <div>
                 <h3 className="text-xl font-semibold mb-4 flex items-center gap-2">
-                  <Monitor className="h-5 w-5" />
-                  2. Add Your First Website
+                  <Bell className="h-5 w-5" />
+                  2. Configure Notifications
                 </h3>
                 <p className="text-gray-600 mb-4">
-                  Add a website URL to start monitoring. The system will automatically detect changes and track them over time.
+                  Set up email notifications, webhooks, or AI-powered filtering to receive alerts when changes are detected.
                 </p>
                 <Button variant="outline" asChild>
                   <Link href="/">
@@ -358,7 +358,7 @@ export default function DocsPage() {
                     <div>
                       <h4 className="font-medium mb-2">Website not being monitored</h4>
                       <p className="text-sm text-gray-600 mb-2">
-                        Check that your Firecrawl API key is configured and valid. Also ensure the website URL is accessible.
+                        Ensure the website URL is accessible and the server's Firecrawl API key is properly configured. Contact support if issues persist.
                       </p>
                     </div>
                     

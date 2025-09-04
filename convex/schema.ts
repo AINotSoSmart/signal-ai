@@ -123,7 +123,6 @@ const schema = defineSchema({
     userId: v.id("users"),
     defaultWebhookUrl: v.optional(v.string()),
     emailNotificationsEnabled: v.boolean(),
-    emailTemplate: v.optional(v.string()),
     // AI Analysis settings
     aiAnalysisEnabled: v.optional(v.boolean()),
     aiModel: v.optional(v.string()), // Changed to string to support any model name

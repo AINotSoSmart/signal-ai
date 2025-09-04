@@ -21,7 +21,7 @@ export const getUserSettings = query({
       return {
         defaultWebhookUrl: null,
         emailNotificationsEnabled: true,
-        emailTemplate: null,
+  
         aiAnalysisEnabled: false,
         aiModel: null,
         aiBaseUrl: null,
@@ -132,40 +132,7 @@ export const toggleEmailNotifications = mutation({
   },
 });
 
-// Update email template
-export const updateEmailTemplate = mutation({
-  args: {
-    template: v.string(),
-  },
-  handler: async (ctx, args) => {
-    const user = await requireCurrentUser(ctx);
 
-    const existingSettings = await ctx.db
-      .query("userSettings")
-      .withIndex("by_user", (q) => q.eq("userId", user._id))
-      .first();
-
-    const now = Date.now();
-
-    if (existingSettings) {
-      await ctx.db.patch(existingSettings._id, {
-        emailTemplate: args.template,
-        updatedAt: now,
-      });
-    } else {
-      await ctx.db.insert("userSettings", {
-        userId: user._id,
-        emailTemplate: args.template,
-        emailNotificationsEnabled: true,
-        defaultWebhookUrl: undefined,
-        createdAt: now,
-        updatedAt: now,
-      });
-    }
-
-    return { success: true };
-  },
-});
 
 // Update AI analysis settings
 export const updateAISettings = mutation({
@@ -314,6 +281,25 @@ export const getUserSettingsInternal = internalQuery({
       .query("userSettings")
       .withIndex("by_user", (q) => q.eq("userId", args.userId))
       .first();
+
+    if (!settings) {
+      return {
+        userId: args.userId,
+        defaultWebhookUrl: null,
+        emailNotificationsEnabled: true,
+   
+        aiAnalysisEnabled: false,
+        aiModel: null,
+        aiBaseUrl: null,
+        aiSystemPrompt: null,
+        aiMeaningfulChangeThreshold: null,
+        aiApiKey: null,
+        emailOnlyIfMeaningful: false,
+        webhookOnlyIfMeaningful: false,
+        createdAt: Date.now(),
+        updatedAt: Date.now(),
+      };
+    }
 
     // Decrypt API key if it exists and is encrypted
     if (settings?.aiApiKey && isEncrypted(settings.aiApiKey)) {

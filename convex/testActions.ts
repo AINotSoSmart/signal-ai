@@ -3,7 +3,7 @@ import { action, internalAction } from "./_generated/server";
 import { requireCurrentUserForAction } from "./helpers";
 import { api, internal } from "./_generated/api";
 import { resend } from "./alertEmail";
-import { sanitizeHtml } from "./lib/sanitize";
+
 
 // Test AI model connection
 export const testAIModel = action({
@@ -101,14 +101,10 @@ export const testEmailSending = action({
       throw new Error("Email is not verified");
     }
     
-    // Get user settings for template
-    const userSettings = await ctx.runQuery(api.userSettings.getUserSettings);
-    
     // Schedule the test email
     await ctx.scheduler.runAfter(0, internal.testActions.sendTestEmailInternal, {
       email: emailConfig.email,
       userId: user,
-      emailTemplate: userSettings?.emailTemplate || undefined,
     });
     
     return {
@@ -123,42 +119,20 @@ export const sendTestEmailInternal = internalAction({
   args: {
     email: v.string(),
     userId: v.id("users"),
-    emailTemplate: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
-    let htmlContent = '';
-    
-    if (args.emailTemplate) {
-      // Use custom template with test data
-      let processedTemplate = args.emailTemplate
-        .replace(/{{websiteName}}/g, 'Example Website (Test)')
-        .replace(/{{websiteUrl}}/g, 'https://example.com')
-        .replace(/{{changeDate}}/g, new Date().toLocaleString())
-        .replace(/{{changeType}}/g, 'Content changed')
-        .replace(/{{pageTitle}}/g, 'Test Page Title')
-        .replace(/{{viewChangesUrl}}/g, process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000')
-        .replace(/{{aiMeaningfulScore}}/g, '85')
-        .replace(/{{aiIsMeaningful}}/g, 'Yes')
-        .replace(/{{aiReasoning}}/g, 'This is a test email to verify your email template is working correctly.')
-        .replace(/{{aiModel}}/g, 'gpt-4o-mini')
-        .replace(/{{aiAnalyzedAt}}/g, new Date().toLocaleString());
-      
-      // Sanitize the HTML
-      htmlContent = sanitizeHtml(processedTemplate);
-    } else {
-      // Use default test template
-      htmlContent = `
-        <h2>Test Email - Firecrawl Observer</h2>
-        <p>This is a test email to verify your email configuration is working correctly.</p>
-        <div style="background: #f5f5f5; padding: 15px; border-radius: 8px; margin: 20px 0;">
-          <h3>Test Configuration</h3>
-          <p><strong>Email:</strong> ${args.email}</p>
-          <p><strong>Sent at:</strong> ${new Date().toLocaleString()}</p>
-          <p><strong>Status:</strong> ✅ Email delivery is working!</p>
-        </div>
-        <p>If you received this email, your email notifications are configured correctly.</p>
-      `;
-    }
+    // Use hardcoded default test template only
+    const htmlContent = `
+      <h2>Test Email - Firecrawl Observer</h2>
+      <p>This is a test email to verify your email configuration is working correctly.</p>
+      <div style="background: #f5f5f5; padding: 15px; border-radius: 8px; margin: 20px 0;">
+        <h3>Test Configuration</h3>
+        <p><strong>Email:</strong> ${args.email}</p>
+        <p><strong>Sent at:</strong> ${new Date().toLocaleString()}</p>
+        <p><strong>Status:</strong> ✅ Email delivery is working!</p>
+      </div>
+      <p>If you received this email, your email notifications are configured correctly.</p>
+    `;
     
     await resend.sendEmail(ctx, {
       from: `${process.env.APP_NAME || 'Firecrawl Observer'} <${process.env.FROM_EMAIL || 'noreply@example.com'}>`,

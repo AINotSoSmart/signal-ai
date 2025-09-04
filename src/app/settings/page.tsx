@@ -14,19 +14,8 @@ import { Id } from "../../../convex/_generated/dataModel"
 import { Loader2, ArrowLeft, Mail, AlertCircle, Key, Copy, Plus, Webhook, CheckCircle, Check, HelpCircle, Clock, XCircle, ExternalLink, Bot, Info, Trash2 } from 'lucide-react'
 import { useAuthActions } from "@convex-dev/auth/react"
 import Link from 'next/link'
-import { FirecrawlKeyManager } from '@/components/FirecrawlKeyManager'
-import dynamic from 'next/dynamic'
-import { validateEmailTemplate } from '@/lib/validateTemplate'
-import { APP_CONFIG, getFromEmail } from '@/config/app.config'
 
-// Dynamic import to avoid SSR issues with TipTap
-const EmailTemplateEditor = dynamic(
-  () => import('@/components/EmailTemplateEditor').then(mod => mod.EmailTemplateEditor),
-  { 
-    ssr: false,
-    loading: () => <div className="h-64 bg-gray-50 rounded-lg animate-pulse" />
-  }
-)
+import { APP_CONFIG, getFromEmail } from '@/config/app.config'
 
 function SettingsContent() {
   const router = useRouter()
@@ -49,15 +38,11 @@ function SettingsContent() {
   // Notification settings state
   const [notificationEmail, setNotificationEmail] = useState('')
   const [defaultWebhook, setDefaultWebhook] = useState('')
-  const [emailTemplate, setEmailTemplate] = useState('')
   const [isUpdatingEmail, setIsUpdatingEmail] = useState(false)
   const [isUpdatingWebhook, setIsUpdatingWebhook] = useState(false)
-  const [isUpdatingTemplate, setIsUpdatingTemplate] = useState(false)
   const [emailSuccess, setEmailSuccess] = useState(false)
   const [emailError, setEmailError] = useState<string | null>(null)
   const [webhookSuccess, setWebhookSuccess] = useState(false)
-  const [templateSuccess, setTemplateSuccess] = useState(false)
-  const [showHtmlSource, setShowHtmlSource] = useState(true)
   const [isSendingTestEmail, setIsSendingTestEmail] = useState(false)
   const [testEmailResult, setTestEmailResult] = useState<{ success: boolean; message: string } | null>(null)
   
@@ -89,7 +74,7 @@ function SettingsContent() {
   const emailConfig = useQuery(api.emailManager.getEmailConfig)
   const updateDefaultWebhook = useMutation(api.userSettings.updateDefaultWebhook)
   const updateEmailConfig = useMutation(api.emailManager.updateEmailConfig)
-  const updateEmailTemplate = useMutation(api.userSettings.updateEmailTemplate)
+
   const resendVerificationEmail = useAction(api.emailManager.resendVerificationEmail)
   const updateAISettings = useMutation(api.userSettings.updateAISettings)
   const updateNotificationFiltering = useMutation(api.userSettings.updateNotificationFiltering)
@@ -144,23 +129,6 @@ function SettingsContent() {
   useEffect(() => {
     if (userSettings?.defaultWebhookUrl) {
       setDefaultWebhook(userSettings.defaultWebhookUrl)
-    }
-    if (userSettings?.emailTemplate) {
-      setEmailTemplate(userSettings.emailTemplate)
-    } else if (userSettings !== undefined) {
-      // Set default template if no custom template exists
-      const defaultTemplate = `
-<h2>Website Change Alert</h2>
-<p>We've detected changes on the website you're monitoring:</p>
-<div style="background: #f5f5f5; padding: 15px; border-radius: 8px; margin: 20px 0;">
-  <h3>{{websiteName}}</h3>
-  <p><a href="{{websiteUrl}}">{{websiteUrl}}</a></p>
-  <p><strong>Changed at:</strong> {{changeDate}}</p>
-  <p><strong>Page Title:</strong> {{pageTitle}}</p>
-</div>
-<p><a href="{{viewChangesUrl}}" style="background: #ff6600; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;">View Changes</a></p>
-      `.trim()
-      setEmailTemplate(defaultTemplate)
     }
     
     // Populate AI settings
@@ -305,17 +273,7 @@ Analyze the provided diff and return a JSON response with:
                   <Webhook className="h-4 w-4" />
                   Webhooks
                 </button>
-                <button
-                  onClick={() => setActiveSection('firecrawl')}
-                  className={`w-full flex items-center gap-3 px-4 py-2 text-sm font-medium rounded-lg transition-colors ${
-                    activeSection === 'firecrawl'
-                      ? 'bg-orange-100 text-orange-700'
-                      : 'text-gray-700 hover:bg-gray-100'
-                  }`}
-                >
-                  <Key className="h-4 w-4" />
-                  Firecrawl Auth
-                </button>
+
                 <button
                   onClick={() => setActiveSection('api')}
                   className={`w-full flex items-center gap-3 px-4 py-2 text-sm font-medium rounded-lg transition-colors ${
@@ -496,215 +454,57 @@ Analyze the provided diff and return a JSON response with:
                           </div>
                         )}
                         
-                        {/* Email template preview */}
-                        <div>
-                          <h4 className="font-medium mb-2">Email Preview</h4>
+                        {/* Email Template Preview */}
+                        <div className="border-t pt-6">
+                          <h4 className="font-medium mb-3 flex items-center gap-2">
+                            <Mail className="h-4 w-4" />
+                            Email Template Preview
+                          </h4>
+                          <p className="text-sm text-gray-600 mb-4">
+                            This is how your notification emails will appear when website changes are detected:
+                          </p>
+                          
                           <div className="border rounded-lg p-4 bg-gray-50">
-                            <div className="space-y-2 text-sm">
-                              <p className="font-semibold">Subject: Changes detected on example.com</p>
-                              <div className="border-t pt-2">
-                                <p className="text-gray-600">Hi there,</p>
-                                <p className="text-gray-600 mt-2">
-                                  We&apos;ve detected changes on the website you&apos;re monitoring:
-                                </p>
-                                <div className="mt-2 p-3 bg-white rounded border">
-                                  <p className="font-medium">example.com</p>
-                                  <p className="text-gray-500 text-xs mt-1">Changed at: {new Date().toLocaleString()}</p>
-                                </div>
-                                <p className="text-gray-600 mt-2">
-                                  <a href="#" className="text-orange-600 underline">View changes →</a>
+                            <div className="bg-white rounded border p-6 max-w-2xl">
+                              <div dangerouslySetInnerHTML={{
+                                __html: `
+                                  <h2 style="color: #333; margin: 0 0 16px 0; font-size: 24px; font-weight: 600;">Website Change Alert</h2>
+                                  <p style="color: #666; margin: 0 0 20px 0; line-height: 1.5;">We've detected changes on the website you're monitoring:</p>
+                                  <div style="background: #f5f5f5; padding: 15px; border-radius: 8px; margin: 20px 0;">
+                                    <h3 style="color: #333; margin: 0 0 12px 0; font-size: 18px; font-weight: 600;">Example Website</h3>
+                                    <p style="margin: 0 0 8px 0;"><a href="https://example.com/page" style="color: #ff6600; text-decoration: none;">https://example.com/page</a></p>
+                                    <p style="margin: 0 0 8px 0; color: #666;"><strong>Changed at:</strong> ${new Date().toLocaleString()}</p>
+                                    <p style="margin: 0 0 8px 0; color: #666;"><strong>Page Title:</strong> Example Page Title</p>
+                                    <div style="background: #e8f4f8; border-left: 4px solid #2196F3; padding: 12px; margin: 15px 0;">
+                                      <h4 style="margin: 0 0 8px 0; color: #1976D2; font-size: 16px; font-weight: 600;">AI Analysis</h4>
+                                      <p style="margin: 0 0 8px 0; color: #333;"><strong>Meaningful Change:</strong> Yes (85% score)</p>
+                                      <p style="margin: 0 0 8px 0; color: #333;"><strong>Reasoning:</strong> The page content has been significantly updated with new product information and pricing changes.</p>
+                                      <p style="font-size: 12px; color: #666; margin: 8px 0 0 0;">Analyzed by gpt-4 at ${new Date().toLocaleString()}</p>
+                                    </div>
+                                  </div>
+                                  <p style="margin: 20px 0 0 0;"><a href="${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}" style="background: #ff6600; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px; display: inline-block;">View Changes</a></p>
+                                `
+                              }} />
+                            </div>
+                          </div>
+                          
+                          <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                            <div className="flex items-start gap-2">
+                              <Info className="h-4 w-4 text-blue-600 mt-0.5" />
+                              <div className="text-sm text-blue-700">
+                                <p className="font-medium mb-1">Template Variables</p>
+                                <p className="text-xs leading-relaxed">
+                                  The email includes: <strong>Website Name</strong>, <strong>Website URL</strong>, <strong>Change Detection Time</strong>, <strong>Page Title</strong> (if available), and <strong>AI Analysis</strong> (when enabled) with meaningful change score, reasoning, and analysis timestamp.
                                 </p>
                               </div>
                             </div>
                           </div>
                         </div>
+
                       </div>
                     </div>
                     
-                    {/* Email Template Editor */}
-                    <div className="border-t pt-6">
-                      <h4 className="font-medium mb-3">Email Template</h4>
-                      <p className="text-sm text-gray-600 mb-4">
-                        Customize the email template that will be sent when changes are detected. Use variables to insert dynamic content.
-                      </p>
-                      
-                      {/* Available Variables */}
-                      <div className="mb-4 p-3 border rounded-lg">
-                        <h5 className="font-medium mb-2">Available Variables</h5>
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-xs">
-                          <div>
-                            <span className="font-mono bg-gray-100 px-1 rounded">{"{{websiteName}}"}</span> - Website name
-                          </div>
-                          <div>
-                            <span className="font-mono bg-gray-100 px-1 rounded">{"{{websiteUrl}}"}</span> - Website URL
-                          </div>
-                          <div>
-                            <span className="font-mono bg-gray-100 px-1 rounded">{"{{changeDate}}"}</span> - When change was detected
-                          </div>
-                          <div>
-                            <span className="font-mono bg-gray-100 px-1 rounded">{"{{changeType}}"}</span> - Type of change
-                          </div>
-                          <div>
-                            <span className="font-mono bg-gray-100 px-1 rounded">{"{{pageTitle}}"}</span> - Page title
-                          </div>
-                          <div>
-                            <span className="font-mono bg-gray-100 px-1 rounded">{"{{viewChangesUrl}}"}</span> - Link to view changes
-                          </div>
-                          {aiEnabled && (
-                            <>
-                              <div>
-                                <span className="font-mono bg-gray-100 px-1 rounded">{"{{aiMeaningfulScore}}"}</span> - AI score (0-100)
-                              </div>
-                              <div>
-                                <span className="font-mono bg-gray-100 px-1 rounded">{"{{aiIsMeaningful}}"}</span> - Yes/No meaningful
-                              </div>
-                              <div>
-                                <span className="font-mono bg-gray-100 px-1 rounded">{"{{aiReasoning}}"}</span> - AI reasoning
-                              </div>
-                              <div>
-                                <span className="font-mono bg-gray-100 px-1 rounded">{"{{aiModel}}"}</span> - AI model used
-                              </div>
-                              <div>
-                                <span className="font-mono bg-gray-100 px-1 rounded">{"{{aiAnalyzedAt}}"}</span> - AI analysis time
-                              </div>
-                            </>
-                          )}
-                        </div>
-                        {aiEnabled && (
-                          <p className="text-xs text-gray-500 mt-2">
-                            AI variables are only available when AI analysis is enabled and a change is analyzed.
-                          </p>
-                        )}
-                      </div>
-                      
-                      {/* Toggle between editor and HTML view */}
-                      <div className="mb-4 flex gap-2">
-                        <Button
-                          variant={showHtmlSource ? "outline" : "code"}
-                          size="sm"
-                          onClick={() => setShowHtmlSource(false)}
-                        >
-                          Editor
-                        </Button>
-                        <Button
-                          variant={showHtmlSource ? "code" : "outline"}
-                          size="sm"
-                          onClick={() => setShowHtmlSource(true)}
-                        >
-                          HTML Source
-                        </Button>
-                      </div>
-                      
-                      {showHtmlSource ? (
-                        <div className="border rounded-lg">
-                          <textarea
-                            value={emailTemplate}
-                            onChange={(e) => setEmailTemplate(e.target.value)}
-                            className="w-full p-4 font-mono text-sm min-h-[300px] rounded-lg"
-                            placeholder="Enter your HTML template here..."
-                            disabled={isUpdatingTemplate}
-                          />
-                        </div>
-                      ) : (
-                        <EmailTemplateEditor
-                          value={emailTemplate}
-                          onChange={setEmailTemplate}
-                          disabled={isUpdatingTemplate}
-                        />
-                      )}
-                      
-                      {/* Email Preview */}
-                      <div className="mt-6">
-                        <h4 className="font-medium mb-3">Preview</h4>
-                        <div className="border rounded-lg p-6 bg-gray-50">
-                          <div className="max-w-xl mx-auto bg-white rounded-lg shadow-sm p-6">
-                            <div className="mb-4 text-sm text-gray-500 border-b pb-2">
-                              <p><strong>From:</strong> {getFromEmail()}</p>
-                              <p><strong>To:</strong> {notificationEmail || APP_CONFIG.email.defaultRecipient}</p>
-                              <p><strong>Subject:</strong> Changes detected on Example Website</p>
-                            </div>
-                            <div 
-                              className="prose prose-sm max-w-none"
-                              dangerouslySetInnerHTML={{ 
-                                __html: emailTemplate
-                                  .replace(/{{websiteName}}/g, 'Example Website')
-                                  .replace(/{{websiteUrl}}/g, 'https://example.com')
-                                  .replace(/{{changeDate}}/g, new Date().toLocaleString())
-                                  .replace(/{{changeType}}/g, 'Content changed')
-                                  .replace(/{{pageTitle}}/g, 'Example Page Title')
-                                  .replace(/{{viewChangesUrl}}/g, '#')
-                                  .replace(/{{aiMeaningfulScore}}/g, '85')
-                                  .replace(/{{aiIsMeaningful}}/g, 'Yes')
-                                  .replace(/{{aiReasoning}}/g, 'The page content has been updated with new product information and pricing changes.')
-                                  .replace(/{{aiModel}}/g, 'gpt-4o-mini')
-                                  .replace(/{{aiAnalyzedAt}}/g, new Date().toLocaleString())
-                              }}
-                            />
-                          </div>
-                        </div>
-                      </div>
-                      
-                      <div className="mt-4 flex items-center justify-between">
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => {
-                            const defaultTemplate = `
-<h2>Website Change Alert</h2>
-<p>We've detected changes on the website you're monitoring:</p>
-<div style="background: #f5f5f5; padding: 15px; border-radius: 8px; margin: 20px 0;">
-  <h3>{{websiteName}}</h3>
-  <p><a href="{{websiteUrl}}">{{websiteUrl}}</a></p>
-  <p><strong>Changed at:</strong> {{changeDate}}</p>
-  <p><strong>Page Title:</strong> {{pageTitle}}</p>
-</div>
-<p><a href="{{viewChangesUrl}}" style="background: #ff6600; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;">View Changes</a></p>
-                            `.trim()
-                            setEmailTemplate(defaultTemplate)
-                            setTemplateSuccess(false)
-                          }}
-                          disabled={isUpdatingTemplate || !emailTemplate}
-                        >
-                          Reset to Default
-                        </Button>
-                        <Button
-                          variant="orange"
-                          size="sm"
-                          onClick={async () => {
-                            // Validate template first
-                            const validation = validateEmailTemplate(emailTemplate)
-                            if (!validation.isValid) {
-                              alert('Template validation failed:\n\n' + validation.errors.join('\n'))
-                              return
-                            }
-                            
-                            setIsUpdatingTemplate(true)
-                            try {
-                              await updateEmailTemplate({ template: emailTemplate })
-                              setTemplateSuccess(true)
-                              setTimeout(() => setTemplateSuccess(false), 3000)
-                            } catch (error) {
-                              console.error('Failed to update template:', error)
-                              alert('Failed to save template. Please try again.')
-                            } finally {
-                              setIsUpdatingTemplate(false)
-                            }
-                          }}
-                          disabled={isUpdatingTemplate || emailTemplate === (userSettings?.emailTemplate || '')}
-                        >
-                          {isUpdatingTemplate ? (
-                            <Loader2 className="h-4 w-4 animate-spin" />
-                          ) : templateSuccess ? (
-                            <>
-                              <CheckCircle className="h-4 w-4 mr-1" />
-                              Saved
-                            </>
-                          ) : (
-                            'Save Template'
-                          )}
-                        </Button>
-                      </div>
-                    </div>
+
                     
                     {/* Global email preferences */}
                     <div className="border-t pt-6">
@@ -978,30 +778,7 @@ Analyze the provided diff and return a JSON response with:
                 </div>
               )}
               
-              {activeSection === 'firecrawl' && (
-                <div className="bg-white rounded-lg shadow-sm p-6">
-                  <h2 className="text-xl font-semibold mb-6">Firecrawl Auth</h2>
-                  
-                  <div className="space-y-6">
-                    <div>
-                      <p className="text-gray-600 mb-4">
-                        Connect your Firecrawl API key to enable website monitoring. Firecrawl powers the web scraping and change detection functionality.
-                      </p>
-                      
-                      <a 
-                        href="https://www.firecrawl.dev/app/api-keys" 
-                        target="_blank" 
-                        rel="noopener noreferrer"
-                        className="text-orange-600 hover:text-orange-700 text-sm font-medium"
-                      >
-                        Get your Firecrawl API key →
-                      </a>
-                    </div>
-                    
-                    <FirecrawlKeyManager />
-                  </div>
-                </div>
-              )}
+
               
               {activeSection === 'api' && (
                 <div className="bg-white rounded-lg shadow-sm p-6">
